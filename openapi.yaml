@@ -1,0 +1,356 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: API specification
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: students
+    description: Student record operations
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      description: Returns server health status
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+  /students:
+    get:
+      operationId: listStudents
+      tags: [students]
+      summary: List students
+      description: Returns student records, optionally filtered by search text and department.
+      parameters:
+        - name: search
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: department
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Student records
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Student"
+    post:
+      operationId: createStudent
+      tags: [students]
+      summary: Create a student
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StudentInput"
+      responses:
+        "201":
+          description: Student created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Student"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "409":
+          description: Duplicate register number
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /students/summary:
+    get:
+      operationId: getStudentSummary
+      tags: [students]
+      summary: Get student dashboard summary
+      responses:
+        "200":
+          description: Student summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StudentSummary"
+  /students/{id}:
+    get:
+      operationId: getStudent
+      tags: [students]
+      summary: Get one student
+      parameters:
+        - $ref: "#/components/parameters/StudentId"
+      responses:
+        "200":
+          description: Student record
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Student"
+        "404":
+          description: Student not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    put:
+      operationId: updateStudent
+      tags: [students]
+      summary: Replace a student
+      parameters:
+        - $ref: "#/components/parameters/StudentId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StudentInput"
+      responses:
+        "200":
+          description: Student updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Student"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Student not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "409":
+          description: Duplicate register number
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    patch:
+      operationId: patchStudent
+      tags: [students]
+      summary: Partially update a student
+      parameters:
+        - $ref: "#/components/parameters/StudentId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StudentUpdate"
+      responses:
+        "200":
+          description: Student updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Student"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Student not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "409":
+          description: Duplicate register number
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    delete:
+      operationId: deleteStudent
+      tags: [students]
+      summary: Delete a student
+      parameters:
+        - $ref: "#/components/parameters/StudentId"
+      responses:
+        "204":
+          description: Student deleted
+        "404":
+          description: Student not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+components:
+  parameters:
+    StudentId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+        minimum: 1
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error
+    Student:
+      type: object
+      properties:
+        id:
+          type: integer
+        fullName:
+          type: string
+        registerNumber:
+          type: string
+        email:
+          type: string
+          format: email
+        phoneNumber:
+          type: ["string", "null"]
+        department:
+          type: ["string", "null"]
+        academicYear:
+          type: ["string", "null"]
+        gender:
+          type: ["string", "null"]
+        dateOfBirth:
+          type: ["string", "null"]
+          format: date
+        address:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - fullName
+        - registerNumber
+        - email
+        - phoneNumber
+        - department
+        - academicYear
+        - gender
+        - dateOfBirth
+        - address
+        - createdAt
+        - updatedAt
+    StudentInput:
+      type: object
+      properties:
+        fullName:
+          type: string
+          minLength: 1
+        registerNumber:
+          type: string
+          minLength: 1
+        email:
+          type: string
+          format: email
+        phoneNumber:
+          type: ["string", "null"]
+          pattern: "^[0-9+()\\-\\s]{7,20}$"
+        department:
+          type: ["string", "null"]
+        academicYear:
+          type: ["string", "null"]
+        gender:
+          type: ["string", "null"]
+        dateOfBirth:
+          type: ["string", "null"]
+          format: date
+        address:
+          type: ["string", "null"]
+      required:
+        - fullName
+        - registerNumber
+        - email
+    StudentUpdate:
+      type: object
+      properties:
+        fullName:
+          type: string
+          minLength: 1
+        registerNumber:
+          type: string
+          minLength: 1
+        email:
+          type: string
+          format: email
+        phoneNumber:
+          type: ["string", "null"]
+          pattern: "^[0-9+()\\-\\s]{7,20}$"
+        department:
+          type: ["string", "null"]
+        academicYear:
+          type: ["string", "null"]
+        gender:
+          type: ["string", "null"]
+        dateOfBirth:
+          type: ["string", "null"]
+          format: date
+        address:
+          type: ["string", "null"]
+    DepartmentCount:
+      type: object
+      properties:
+        department:
+          type: string
+        count:
+          type: integer
+      required:
+        - department
+        - count
+    StudentSummary:
+      type: object
+      properties:
+        totalStudents:
+          type: integer
+        departmentCounts:
+          type: array
+          items:
+            $ref: "#/components/schemas/DepartmentCount"
+        recentStudents:
+          type: array
+          items:
+            $ref: "#/components/schemas/Student"
+      required:
+        - totalStudents
+        - departmentCounts
+        - recentStudents
+
